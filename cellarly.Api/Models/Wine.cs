@@ -5,7 +5,7 @@ namespace cellarly.Api.Models
     public class Wine
     {
 
-        public int id { get; set; }
+        public int Id { get; set; }
 
         [Required(ErrorMessage = "O Campo nome é obrigatório")]
         [StringLength(50, ErrorMessage = "O Campo nome deve ter no máximo 50 caracteres")]
