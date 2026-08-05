@@ -1,46 +1,54 @@
-﻿using cellarly.Api.Models;
+﻿using cellarly.Api.Data;
+using cellarly.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
 
 
-namespace cellarly.Api.Controllers
+namespace cellarly.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class WineController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class WineController : ControllerBase
+
+    private WineContext _context;
+    
+    public WineController(WineContext context)
     {
-        public static List<Wine> Wines = new List<Wine>();
+        _context = context;
+    }
 
-        [HttpPost]
-        public IActionResult CreateWine([FromBody] Wine wine)
+    [HttpPost]
+    public IActionResult CreateWine([FromBody] Wine wine)
+    {
+        if (wine == null)
         {
-            if (wine == null)
-            {
-                return BadRequest();
-            }
-            wine.Id = wine.Id++;
-            Wines.Add(wine);
-            return CreatedAtAction(nameof(GetWine), new { id = wine.Id }, wine);
+            return BadRequest();
         }
 
-        [HttpGet]
-        public IEnumerable<Wine> GetAllWines([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        _context.Wines.Add(wine);
+        _context.SaveChanges();
+
+        return CreatedAtAction(nameof(GetWine), new { id = wine.Id }, wine);
+    }
+
+    [HttpGet]
+    public IEnumerable<Wine> GetAllWines([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return _context.Wines.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult GetWine(int id)
+    {
+        var wine = _context.Wines.FirstOrDefault(wine => wine.Id == id);
+
+        if (wine == null)
         {
-            return Wines.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            return NotFound(id);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetWine(int id)
-        {
-            var wine = Wines.FirstOrDefault(wine => wine.Id == id);
-
-            if (wine == null)
-            {
-                return NotFound(id);
-            }
-
-            return Ok(wine);
-        }
+        return Ok(wine);
     }
 }
